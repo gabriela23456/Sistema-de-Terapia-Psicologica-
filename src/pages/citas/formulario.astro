@@ -1,0 +1,622 @@
+---
+/**
+ * CenTI-R - Formulario de citas
+ * Datos personales del paciente + Datos de la consulta
+ */
+const dias = Array.from({ length: 31 }, (_, i) => i + 1);
+const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const anios = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - 80 + i);
+const aniosCita = [new Date().getFullYear(), new Date().getFullYear() + 1];
+const horas = Array.from({ length: 12 }, (_, i) => (i + 8).toString().padStart(2, '0') + ':00');
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Formulario de cita - CenTI-R</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="formulario-page">
+    <aside class="sidebar">
+      <h2>¡NOSOTROS TE AYUDAMOS!</h2>
+      <p class="slogan">Te contactaremos en un abrir y cerrar de alas.</p>
+    </aside>
+
+    <main class="form-main">
+      <header class="form-header">
+        <div class="form-header-top">
+          <a href="/" class="brand-small">CenTI-R</a>
+          <nav class="form-nav">
+            <a href="/dashboard/">Mis citas</a>
+            <a href="/pagos/">Pagos</a>
+            <a href="/">Inicio</a>
+          </nav>
+        </div>
+        <a href="/dashboard/" class="back">← Volver al panel</a>
+        <h1>Formulario de cita</h1>
+      </header>
+
+      <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;" id="toastContainer"></div>
+
+      <form id="citaForm" class="cita-form">
+        <section class="section section--patient">
+          <h3>Datos personales del paciente</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre(s) *</label>
+              <input type="text" id="nombre" name="nombre" required placeholder="Nombre(s)" />
+            </div>
+            <div class="form-group">
+              <label for="apellido_paterno">Apellido Paterno *</label>
+              <input type="text" id="apellido_paterno" name="apellido_paterno" required />
+            </div>
+            <div class="form-group">
+              <label for="apellido_materno">Apellido Materno *</label>
+              <input type="text" id="apellido_materno" name="apellido_materno" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Correo electrónico *</label>
+              <input type="email" id="email" name="email" required placeholder="ejemplo@ejemplo.com" />
+            </div>
+            <div class="form-group">
+              <label for="telefono">Número de teléfono *</label>
+              <input type="tel" id="telefono" name="telefono" required placeholder="+00 012 345 6789" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha de nacimiento (DD-MM-AAAA) *</label>
+              <div class="date-inputs">
+                <select id="dia_nac" name="dia_nac" required>
+                  <option value="">Día</option>
+                  {dias.map((d) => <option value={d}>{d}</option>)}
+                </select>
+                <select id="mes_nac" name="mes_nac" required>
+                  <option value="">Mes</option>
+                  {meses.map((m, i) => <option value={String(i + 1).padStart(2,'0')}>{m}</option>)}
+                </select>
+                <select id="anio_nac" name="anio_nac" required>
+                  <option value="">Año</option>
+                  {anios.map((y) => <option value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section--consulta">
+          <h3>Datos de la Consulta</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo_consulta">Tipo de consulta *</label>
+              <select id="tipo_consulta" name="tipo_consulta" required>
+                <option value="individual">Individual</option>
+                <option value="pareja">Pareja</option>
+                <option value="familiar">Familiar</option>
+                <option value="infantil">Infantil</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modalidad">Modalidad *</label>
+              <select id="modalidad" name="modalidad" required>
+                <option value="presencial">Presencial</option>
+                <option value="en_linea">En línea</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group form-group--calendario">
+              <label>Selecciona fecha disponible *</label>
+              <p class="calendario-hint">Primero elige un especialista. Las fechas en verde tienen disponibilidad.</p>
+              <div id="calendarioContainer" class="calendario-container">
+                <div class="calendario-header">
+                  <button type="button" class="btn-cal-mes" id="btnMesAnterior" aria-label="Mes anterior">‹</button>
+                  <h4 id="calendarioTitulo" class="calendario-titulo">Enero 2026</h4>
+                  <button type="button" class="btn-cal-mes" id="btnMesSiguiente" aria-label="Mes siguiente">›</button>
+                </div>
+                <div class="calendario-dias-semana">
+                  <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+                </div>
+                <div id="calendarioGrid" class="calendario-grid"></div>
+              </div>
+              <input type="hidden" id="dia" name="dia" />
+              <input type="hidden" id="mes" name="mes" />
+              <input type="hidden" id="anio" name="anio" />
+            </div>
+            <div class="form-group">
+              <label>Horario de consulta *</label>
+              <div id="horariosContainer" class="horarios-container">
+                <p class="text-muted small">Selecciona una fecha en el calendario</p>
+              </div>
+              <input type="hidden" id="hora" name="hora" />
+              <input type="hidden" id="minutos" name="minutos" value="00" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="costo">Costo</label>
+              <input type="text" id="costo" name="costo" readonly placeholder="Calcula el costo" />
+            </div>
+            <div class="form-group">
+              <label>Género del especialista *</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="genero_especialista" value="hombre" required /> Hombre
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="genero_especialista" value="mujer" /> Mujer
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="terapeuta">Especialista *</label>
+            <select id="terapeuta" name="terapeuta_id" required>
+              <option value="">Selecciona un especialista</option>
+            </select>
+          </div>
+        </section>
+
+        <div id="alertContainer"></div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-agendar">AGENDAR CITA</button>
+          <button type="button" class="btn btn-cancelar" id="btnCancelar">CANCELAR</button>
+          <button type="button" class="btn btn-calcular" id="btnCalcular">CALCULAR COSTO</button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <!-- Modal confirmación de cita agendada -->
+  <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-4">
+        <div class="modal-body">
+          <div class="text-success mb-3" style="font-size: 4rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" viewBox="0 0 16 16" class="mx-auto d-block">
+              <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+            </svg>
+          </div>
+          <h4 class="modal-title fw-bold text-dark mb-3">¡GRACIAS POR AGENDAR TU CITA CON NOSOTROS!</h4>
+          <p class="text-muted mb-2">Se le notificará a su especialista los datos sobre la cita.</p>
+          <p class="text-muted mb-4">La información de la cita se enviará a su correo como mensaje.</p>
+          <button type="button" class="btn btn-primary btn-lg px-4" id="btnAceptarConfirmacion">ACEPTAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = (typeof window !== 'undefined' && window.location.hostname === 'localhost' && ['4321','4322','4323'].includes(window.location.port || '')) ? 'http://localhost:8080/api' : '/api';
+    const fetchOpts = (opts) => ({ ...opts, credentials: 'include' });
+
+    async function checkAuth() {
+      const res = await fetch(`${API}/auth`, fetchOpts());
+      const data = await res.json();
+      if (!data.logged) {
+        window.location.href = '/login/';
+        return null;
+      }
+      return data.user;
+    }
+
+    function getFechaNacimiento() {
+      const d = document.getElementById('dia_nac').value;
+      const m = document.getElementById('mes_nac').value;
+      const y = document.getElementById('anio_nac').value;
+      if (!d || !m || !y) return null;
+      return `${y}-${m}-${d.padStart(2,'0')}`;
+    }
+
+    function getFechaCita() {
+      const d = document.getElementById('dia').value;
+      const m = document.getElementById('mes').value;
+      const y = document.getElementById('anio').value;
+      if (!d || !m || !y) return null;
+      return `${y}-${m}-${String(d).padStart(2,'0')}`;
+    }
+
+    function getHoraCita() {
+      const horaInput = document.getElementById('hora');
+      const val = horaInput?.value || '';
+      if (val.includes(':')) return val.length === 5 ? val + ':00' : val;
+      return val ? `${val}:00:00` : '';
+    }
+
+    async function calcularCosto() {
+      const tipo = document.getElementById('tipo_consulta').value;
+      const modalidad = document.getElementById('modalidad').value;
+      const res = await fetch(`${API}/costo?tipo=${tipo}&modalidad=${modalidad}`, fetchOpts());
+      const json = await res.json();
+      document.getElementById('costo').value = `$${json.costo} ${json.moneda || 'MXN'}`;
+    }
+
+    async function loadTerapeutas() {
+      const genero = document.querySelector('input[name="genero_especialista"]:checked')?.value;
+      const url = genero ? `${API}/terapeutas?genero=${genero}` : `${API}/terapeutas`;
+      const res = await fetch(url, fetchOpts());
+      return res.json();
+    }
+
+    async function loadProfile() {
+      const res = await fetch(`${API}/usuarios`, fetchOpts());
+      if (res.ok) return res.json();
+      return null;
+    }
+
+    function fillProfile(profile) {
+      if (!profile) return;
+      const set = (id, val) => { const e = document.getElementById(id); if (e && val) e.value = val; };
+      set('nombre', profile.nombre);
+      set('apellido_paterno', profile.apellido_paterno);
+      set('apellido_materno', profile.apellido_materno);
+      set('email', profile.email);
+      set('telefono', profile.telefono);
+      if (profile.fecha_nacimiento) {
+        const [y, m, d] = profile.fecha_nacimiento.split('-');
+        set('anio_nac', y); set('mes_nac', m); set('dia_nac', d?.replace(/^0/,''));
+      }
+    }
+
+    let calendarioMes = new Date().getMonth() + 1;
+    let calendarioAnio = new Date().getFullYear();
+    let fechasDisponibles = [];
+    let fechaSeleccionada = null;
+
+    async function cargarDisponibilidad() {
+      const terapeutaId = document.getElementById('terapeuta').value;
+      if (!terapeutaId) {
+        document.getElementById('calendarioGrid').innerHTML = '<p class="cal-msg">Selecciona un especialista</p>';
+        return;
+      }
+      const res = await fetch(`${API}/disponibilidad?terapeuta_id=${terapeutaId}&mes=${calendarioMes}&anio=${calendarioAnio}`, fetchOpts());
+      const json = await res.json();
+      fechasDisponibles = json.fechas || [];
+      renderCalendario();
+    }
+
+    function renderCalendario() {
+      const grid = document.getElementById('calendarioGrid');
+      const titulo = document.getElementById('calendarioTitulo');
+      const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      titulo.textContent = `${nombresMes[calendarioMes - 1]} ${calendarioAnio}`;
+
+      const primerDia = new Date(calendarioAnio, calendarioMes - 1, 1);
+      const ultimoDia = new Date(calendarioAnio, calendarioMes, 0);
+      const diasMes = ultimoDia.getDate();
+      let inicioSemana = primerDia.getDay() - 1; // Lunes = 0
+      if (inicioSemana < 0) inicioSemana = 6;
+
+      const hoy = new Date().toISOString().slice(0, 10);
+      let html = '';
+      for (let i = 0; i < inicioSemana; i++) html += '<span class="cal-dia cal-vacio"></span>';
+      for (let d = 1; d <= diasMes; d++) {
+        const fecha = `${calendarioAnio}-${String(calendarioMes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const disponible = fechasDisponibles.includes(fecha);
+        const pasado = fecha < hoy;
+        let cls = 'cal-dia';
+        if (pasado) cls += ' cal-pasado';
+        else if (disponible) cls += ' cal-disponible';
+        else cls += ' cal-no-disponible';
+        if (fechaSeleccionada === fecha) cls += ' cal-seleccionado';
+        const click = (!pasado && disponible) ? `onclick="seleccionarFecha('${fecha}')"` : '';
+        html += `<span class="${cls}" data-fecha="${fecha}" ${click}>${d}</span>`;
+      }
+      grid.innerHTML = html;
+    }
+
+    window.seleccionarFecha = function(fecha) {
+      fechaSeleccionada = fecha;
+      const [y, m, d] = fecha.split('-');
+      document.getElementById('dia').value = parseInt(d, 10);
+      document.getElementById('mes').value = m;
+      document.getElementById('anio').value = y;
+      renderCalendario();
+      cargarHorarios(fecha);
+    };
+
+    async function cargarHorarios(fecha) {
+      const terapeutaId = document.getElementById('terapeuta').value;
+      const container = document.getElementById('horariosContainer');
+      const selHora = document.getElementById('hora');
+      if (!terapeutaId) return;
+      const res = await fetch(`${API}/disponibilidad?terapeuta_id=${terapeutaId}&fecha=${fecha}`, fetchOpts());
+      const json = await res.json();
+      const horas = json.horas || [];
+      if (horas.length === 0) {
+        container.innerHTML = '<p class="text-muted small">No hay horarios disponibles</p>';
+        selHora.value = '';
+        selHora.removeAttribute('required');
+        return;
+      }
+      container.innerHTML = '<div class="horarios-grid">' + horas.map(h => 
+        `<button type="button" class="btn-hora" data-hora="${h}">${h}</button>`
+      ).join('') + '</div>';
+      selHora.value = '';
+      container.querySelectorAll('.btn-hora').forEach(btn => {
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.btn-hora').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selHora.value = btn.dataset.hora + ':00';
+          selHora.setAttribute('required', 'required');
+        });
+      });
+    }
+
+    (async () => {
+      const user = await checkAuth();
+      if (!user) return;
+
+      const profile = await loadProfile();
+      fillProfile(profile);
+
+      const terapeutas = await loadTerapeutas();
+      const sel = document.getElementById('terapeuta');
+      sel.innerHTML = '<option value="">Selecciona un especialista</option>' +
+        terapeutas.map(t => `<option value="${t.id}">${t.nombre}${t.especialidad ? ' - ' + t.especialidad : ''}</option>`).join('');
+
+      document.getElementById('btnCalcular').addEventListener('click', calcularCosto);
+      document.getElementById('btnCancelar').addEventListener('click', () => window.location.href = '/dashboard/');
+
+      document.getElementById('btnMesAnterior').addEventListener('click', () => {
+        if (calendarioMes === 1) { calendarioMes = 12; calendarioAnio--; } else calendarioMes--;
+        cargarDisponibilidad();
+      });
+      document.getElementById('btnMesSiguiente').addEventListener('click', () => {
+        if (calendarioMes === 12) { calendarioMes = 1; calendarioAnio++; } else calendarioMes++;
+        cargarDisponibilidad();
+      });
+
+      sel.addEventListener('change', () => {
+        fechaSeleccionada = null;
+        document.getElementById('dia').value = '';
+        document.getElementById('mes').value = '';
+        document.getElementById('anio').value = '';
+        document.getElementById('horariosContainer').innerHTML = '<p class="text-muted small">Selecciona una fecha en el calendario</p>';
+        document.getElementById('hora').value = '';
+        cargarDisponibilidad();
+      });
+
+      document.querySelectorAll('input[name="genero_especialista"]').forEach(el => {
+        el.addEventListener('change', () => {
+          const g = document.querySelector('input[name="genero_especialista"]:checked')?.value;
+          fetch(g ? `${API}/terapeutas?genero=${g}` : `${API}/terapeutas`, fetchOpts()).then(r => r.json()).then(list => {
+            sel.innerHTML = '<option value="">Selecciona un especialista</option>' +
+              list.map(t => `<option value="${t.id}">${t.nombre}${t.especialidad ? ' - ' + t.especialidad : ''}</option>`).join('');
+            cargarDisponibilidad();
+          });
+        });
+      });
+
+      renderCalendario();
+
+      function showToast(type, title, body) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const id = 'toast-' + Date.now();
+        const bg = type === 'success' ? 'success' : type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'info';
+        container.insertAdjacentHTML('beforeend', `
+          <div class="toast align-items-center text-bg-${bg} border-0" id="${id}" role="alert">
+            <div class="d-flex">
+              <div class="toast-body"><strong>${title}</strong>${body ? '<br>' + body : ''}</div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+          </div>
+        `);
+        const el = document.getElementById(id);
+        const toast = new bootstrap.Toast(el, { delay: 6000 });
+        toast.show();
+        el.addEventListener('hidden.bs.toast', () => el.remove());
+      }
+
+      function showError(msg) {
+        const container = document.getElementById('alertContainer');
+        container.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <strong>Error:</strong> ${msg}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>`;
+      }
+
+      function showSuccessModal() {
+        const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+        modal.show();
+        document.getElementById('btnAceptarConfirmacion').onclick = () => {
+          modal.hide();
+          window.location.href = '/dashboard/';
+        };
+      }
+
+      document.getElementById('citaForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        document.getElementById('alertContainer').innerHTML = '';
+
+        const fecha = getFechaCita();
+        const hora = getHoraCita();
+        const fechaNac = getFechaNacimiento();
+        if (!fecha || !hora) {
+          showError('Completa fecha y horario de la consulta');
+          showToast('warning', 'Datos incompletos', 'Selecciona una fecha disponible (en verde) y un horario.');
+          return;
+        }
+
+        const payload = {
+          terapeuta_id: parseInt(document.getElementById('terapeuta').value),
+          fecha,
+          hora_inicio: hora,
+          modalidad: document.getElementById('modalidad').value,
+          tipo_consulta: document.getElementById('tipo_consulta').value,
+          genero_especialista: document.querySelector('input[name="genero_especialista"]:checked')?.value,
+          costo: parseFloat(document.getElementById('costo').value?.replace(/[^0-9.]/g,'') || 0) || null
+        };
+
+        const profileUpdate = {
+          nombre: document.getElementById('nombre').value.trim(),
+          apellido_paterno: document.getElementById('apellido_paterno').value.trim(),
+          apellido_materno: document.getElementById('apellido_materno').value.trim(),
+          telefono: document.getElementById('telefono').value.trim(),
+          fecha_nacimiento: fechaNac
+        };
+
+        try {
+          await fetch(`${API}/usuarios`, fetchOpts({
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(profileUpdate)
+          }));
+
+          const res = await fetch(`${API}/citas`, fetchOpts({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }));
+          const json = await res.json();
+
+          if (res.ok) {
+            showToast('success', 'Cita agendada', 'Revisa tu panel para ver los detalles.');
+            showSuccessModal();
+          } else {
+            const msg = json.error || 'Error al agendar';
+            showError(msg);
+            if (res.status === 409) {
+              showToast('warning', 'Horario no disponible', 'Ese horario ya está ocupado. Elige otra fecha u hora en el calendario.');
+            } else {
+              showToast('danger', 'Error', msg);
+            }
+          }
+        } catch (err) {
+          showError('Error de conexión. Verifica que el API esté corriendo.');
+          showToast('danger', 'Error de conexión', 'Verifica que el servidor esté activo.');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+
+<style is:global>
+  :root {
+    --centir-pink: #E91E8C;
+    --centir-purple: #9C27B0;
+    --centir-dark: #6B1E5E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100vh; font-family: 'Nunito', system-ui, sans-serif; background: #f8f5f7; }
+
+  .formulario-page { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 280px; min-width: 280px;
+    background: linear-gradient(180deg, var(--centir-pink) 0%, var(--centir-dark) 100%);
+    color: white; padding: 3rem 2rem;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .sidebar h2 { font-size: 1.5rem; margin-bottom: 1rem; line-height: 1.3; }
+  .slogan { font-size: 1rem; opacity: 0.95; }
+
+  .form-main { flex: 1; padding: 2rem 3rem; overflow-y: auto; }
+  .form-header { margin-bottom: 2rem; }
+  .form-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .brand-small { color: var(--centir-pink); font-weight: 800; font-size: 1.25rem; text-decoration: none; }
+  .form-nav { display: flex; gap: 1rem; }
+  .form-nav a { color: #555; text-decoration: none; font-size: 0.9rem; }
+  .form-nav a:hover { color: var(--centir-pink); }
+  .form-header .back { color: var(--centir-pink); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+  .form-header h1 { font-size: 1.5rem; color: #333; margin-top: 0.5rem; }
+
+  .section { margin-bottom: 2rem; }
+  .section h3 {
+    background: linear-gradient(135deg, var(--centir-pink), var(--centir-purple));
+    color: white; padding: 0.75rem 1.25rem; border-radius: 0.5rem 0.5rem 0 0;
+    font-size: 1rem; margin-bottom: 0;
+  }
+  .section > .form-row, .section > .form-group { padding: 1.25rem; background: white; border: 1px solid #e8e0e5; border-top: none; }
+  .section > .form-row:first-of-type, .section > .form-group:first-of-type { padding-top: 1.25rem; }
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; }
+  .form-row + .form-row { padding-top: 0; margin-top: -1px; }
+  .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.35rem; color: #444; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 0.35rem; font-family: inherit;
+  }
+  .form-group input[readonly] { background: #f5f5f5; cursor: default; }
+  .date-inputs, .time-inputs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .date-inputs select, .time-inputs select { flex: 1; min-width: 80px; }
+  .radio-group { display: flex; gap: 1.5rem; padding: 0.5rem 0; }
+  .radio-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 400; }
+
+  #alertContainer { margin: 1rem 0; }
+  .form-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+  .btn { padding: 0.85rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer; }
+  .btn-agendar { background: #2e7d32; color: white; }
+  .btn-agendar:hover { background: #1b5e20; }
+  .btn-cancelar { background: #c62828; color: white; }
+  .btn-cancelar:hover { background: #b71c1c; }
+  .btn-calcular { background: #1565c0; color: white; }
+  .btn-calcular:hover { background: #0d47a1; }
+
+  .form-group--calendario { max-width: 320px; }
+  .calendario-hint { font-size: 0.8rem; color: #666; margin-bottom: 0.75rem; }
+  .calendario-container {
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 0.5rem;
+    padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .calendario-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eee;
+  }
+  .btn-cal-mes {
+    width: 32px; height: 32px; border: 1px solid #ddd; background: #f9f9f9;
+    border-radius: 0.25rem; font-size: 1.2rem; cursor: pointer; line-height: 1;
+  }
+  .btn-cal-mes:hover { background: #eee; }
+  .calendario-titulo { font-size: 1rem; font-weight: 700; margin: 0; color: #333; }
+  .calendario-dias-semana {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 2px; margin-bottom: 0.5rem; font-size: 0.7rem;
+    font-weight: 600; color: #666; text-align: center;
+  }
+  .calendario-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  }
+  .cal-dia {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 500; border-radius: 0.25rem;
+    min-width: 0;
+  }
+  .cal-vacio { background: transparent; }
+  .cal-pasado { background: #f5f5f5; color: #bbb; cursor: default; }
+  .cal-no-disponible { background: #f0f0f0; color: #999; cursor: not-allowed; }
+  .cal-disponible {
+    background: #2e7d32; color: white; cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .cal-disponible:hover { background: #1b5e20; transform: scale(1.05); }
+  .cal-seleccionado {
+    background: #1565c0 !important; box-shadow: 0 0 0 2px #0d47a1;
+  }
+  .cal-msg { grid-column: 1 / -1; text-align: center; color: #999; font-size: 0.9rem; padding: 1rem; }
+  .horarios-container { min-height: 60px; }
+  .horarios-grid {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+  }
+  .btn-hora {
+    padding: 0.5rem 1rem; border: 1px solid #ddd; background: #f9f9f9;
+    border-radius: 0.35rem; font-size: 0.9rem; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-hora:hover { background: #e8f5e9; border-color: #2e7d32; }
+  .btn-hora.active { background: #2e7d32; color: white; border-color: #2e7d32; }
+
+  @media (max-width: 768px) {
+    .formulario-page { flex-direction: column; }
+    .sidebar { width: 100%; min-height: 150px; padding: 2rem; }
+    .form-main { padding: 1.5rem; }
+  }
+</style>

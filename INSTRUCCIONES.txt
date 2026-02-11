@@ -1,0 +1,35 @@
+CenTI-R - Si npm install falla
+================================
+
+ERRORES COMUNES Y SOLUCIÓN:
+
+1. "EBUSY" / "resource busy or locked"
+   - Cierra Cursor/VS Code por completo
+   - Cierra todas las terminales
+   - Ejecuta: reparar.bat
+
+2. "esbuild" / "EFTYPE"
+   - El antivirus puede bloquear esbuild.exe
+   - Añade la carpeta Centir a exclusiones del antivirus
+   - O ejecuta reparar.bat como Administrador
+
+3. Pasos manuales:
+   a) Cierra Cursor
+   b) Abre CMD como Administrador (clic derecho > Ejecutar como admin)
+   c) cd C:\Users\zamor\Downloads\Centir
+   d) rmdir /s /q node_modules
+   e) del package-lock.json
+   f) npm install
+   g) php api/seed.php
+
+4. Solo API (sin frontend):
+   Si no puedes instalar npm, al menos puedes probar la API:
+   php -S localhost:8080 -t api api/router.php
+   Luego abre: http://localhost:8080/api/auth
+
+5. Para iniciar-solo.bat en PowerShell:
+   .\iniciar-solo.bat
+
+6. Si ves pantalla en blanco o error "spawn EPERM":
+   - Ejecuta iniciar-preview.bat (compila y usa vista previa)
+   - O manualmente: npm run build  y luego  npm run preview

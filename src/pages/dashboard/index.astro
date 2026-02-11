@@ -1,0 +1,381 @@
+---
+/**
+ * CenTI-R - Dashboard principal
+ * Panel de gestión de citas para pacientes
+ */
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi panel - CenTI-R</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <header class="site-header-dash">
+      <div class="container-header">
+        <a href="/" class="brand">
+          <span class="brand-icon">◐</span>
+          <span class="brand-text">CenTI-R</span>
+        </a>
+        <nav class="nav-menu">
+          <a href="/#consultas">Consultas</a>
+          <a href="/#cursos">Cursos</a>
+          <a href="/citas/formulario/" class="nav-active">Agendar cita</a>
+          <a href="/pagos/">Pagos</a>
+        </nav>
+        <div class="nav-user">
+          <div class="user-badge">
+            <span class="user-avatar" id="userAvatar">G</span>
+            <span class="user-name" id="userName">Usuario</span>
+          </div>
+          <a href="#" class="btn-logout" id="btnLogout">Cerrar sesión</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;" id="toastContainer"></div>
+
+    <main class="main">
+      <section class="section">
+        <a href="/" class="back-link-dash">← Volver al inicio</a>
+        <div class="section-hero">
+          <h1>Mis citas</h1>
+          <p class="subtitle">Gestiona tus citas de terapia psicológica</p>
+          <a href="/citas/formulario/" class="btn btn-primary" id="btnNuevaCita">
+            <span class="btn-icon">+</span> Nueva cita
+          </a>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div id="citasList" class="citas-list">
+          <p class="loading">Cargando...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal confirmación cancelar cita -->
+  <div class="modal fade" id="modalCancelar" tabindex="-1" aria-labelledby="modalCancelarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalCancelarLabel">Confirmar cancelación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea cancelar esta cita?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, volver</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmarCancelar">Sí, cancelar cita</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = (typeof window !== 'undefined' && window.location.hostname === 'localhost' && ['4321','4322','4323'].includes(window.location.port || '')) ? 'http://localhost:8080/api' : '/api';
+    const fetchOpts = (opts = {}) => ({ ...opts, credentials: 'include' });
+
+    async function checkAuth() {
+      const res = await fetch(`${API}/auth`, fetchOpts());
+      const data = await res.json();
+      if (!data.logged) {
+        window.location.href = '/login/';
+        return null;
+      }
+      return data.user;
+    }
+
+    async function logout() {
+      await fetch(`${API}/auth`, fetchOpts({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' })
+      }));
+      window.location.href = '/';
+    }
+
+    async function loadCitas() {
+      const res = await fetch(`${API}/citas`, fetchOpts());
+      if (res.status === 401) {
+        window.location.href = '/login/';
+        return;
+      }
+      return res.json();
+    }
+
+    function renderCitas(citas) {
+      const list = document.getElementById('citasList');
+      if (!citas || citas.length === 0) {
+        list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+          </div>
+          <h3>No tienes citas programadas</h3>
+          <p>Agenda tu primera cita para comenzar tu proceso de terapia psicológica.</p>
+          <a href="/citas/formulario/" class="btn btn-primary btn-empty">Agendar mi primera cita</a>
+        </div>
+      `;
+        return;
+      }
+
+      const estados = {
+        pendiente: { label: 'Pendiente', class: 'estado-pendiente' },
+        confirmada: { label: 'Confirmada', class: 'estado-confirmada' },
+        completada: { label: 'Completada', class: 'estado-completada' },
+        cancelada: { label: 'Cancelada', class: 'estado-cancelada' },
+        no_asistio: { label: 'No asistió', class: 'estado-no-asistio' }
+      };
+
+      list.innerHTML = citas.map(c => {
+        const e = estados[c.estado] || estados.pendiente;
+        return `
+          <div class="cita-card" data-id="${c.id}">
+            <div class="cita-header">
+              <span class="cita-fecha">${c.fecha} ${c.hora_inicio}</span>
+              <span class="cita-estado ${e.class}">${e.label}</span>
+            </div>
+            <div class="cita-body">
+              <p><strong>Terapeuta:</strong> ${c.terapeuta_nombre}</p>
+              <p><strong>Especialidad:</strong> ${c.especialidad || '—'}</p>
+              <p><strong>Modalidad:</strong> ${c.modalidad === 'en_linea' ? 'En línea' : 'Presencial'}</p>
+            </div>
+            ${c.estado === 'pendiente' || c.estado === 'confirmada' ? `
+              <div class="cita-actions">
+                ${c.costo ? `<a href="/pagos/?cita=${c.id}" class="btn-pagar-cita">Pagar $${c.costo}</a>` : ''}
+                <button class="btn-cancelar" data-id="${c.id}">Cancelar cita</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.btn-cancelar').forEach(btn => {
+        btn.addEventListener('click', () => cancelarCita(btn.dataset.id));
+      });
+    }
+
+    function showToast(type, title, body) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const id = 'toast-' + Date.now();
+      const bg = type === 'success' ? 'success' : type === 'danger' ? 'danger' : 'warning';
+      container.insertAdjacentHTML('beforeend', `
+        <div class="toast align-items-center text-bg-${bg} border-0" id="${id}" role="alert">
+          <div class="d-flex">
+            <div class="toast-body"><strong>${title}</strong>${body ? '<br>' + body : ''}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      `);
+      const el = document.getElementById(id);
+      const toast = new bootstrap.Toast(el, { delay: 5000 });
+      toast.show();
+      el.addEventListener('hidden.bs.toast', () => el.remove());
+    }
+
+    function showAlert(type, msg, dismissible = true) {
+      const container = document.getElementById('alertContainer');
+      const closeBtn = dismissible ? '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>' : '';
+      container.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${msg}${closeBtn}</div>`;
+      setTimeout(() => { const a = container.querySelector('.alert'); if (a) a.remove(); }, 5000);
+    }
+
+    function confirmarCancelar(id) {
+      const modal = new bootstrap.Modal(document.getElementById('modalCancelar'));
+      document.getElementById('btnConfirmarCancelar').onclick = async () => {
+        modal.hide();
+        try {
+          const res = await fetch(`${API}/citas/${id}`, fetchOpts({ method: 'DELETE' }));
+          if (res.ok) {
+            showToast('success', 'Cita cancelada', 'La cita ha sido cancelada correctamente.');
+            showAlert('success', '<strong>¡Cita cancelada!</strong> La cita ha sido cancelada correctamente.');
+            const citas = await loadCitas();
+            renderCitas(citas);
+          } else {
+            const json = await res.json();
+            showToast('danger', 'Error', json.error || 'No se pudo cancelar la cita.');
+            showAlert('danger', '<strong>Error:</strong> ' + (json.error || 'No se pudo cancelar la cita.'));
+          }
+        } catch (err) {
+          showToast('danger', 'Error', 'Error de conexión.');
+          showAlert('danger', '<strong>Error:</strong> Error de conexión.');
+        }
+      };
+      modal.show();
+    }
+
+    async function cancelarCita(id) {
+      confirmarCancelar(id);
+    }
+
+    (async () => {
+      const user = await checkAuth();
+      if (!user) return;
+
+      document.getElementById('userName').textContent = user.nombre;
+      const avatar = document.getElementById('userAvatar');
+      if (avatar) avatar.textContent = (user.nombre || 'U').charAt(0).toUpperCase();
+      document.getElementById('btnLogout').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+
+      const citas = await loadCitas();
+      renderCitas(citas);
+    })();
+  </script>
+</body>
+</html>
+
+<style is:global>
+  :root { --primary: #5B4B8A; --primary-dark: #4A3D72; --text: #1C1917; --text-muted: #57534E; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100vh;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--text);
+    background: #FAFAF9;
+  }
+
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+  .site-header-dash {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .container-header {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: white;
+  }
+  .brand:hover { color: white; opacity: 0.95; }
+  .brand-icon { display: none; }
+  .nav-menu { display: flex; gap: 1.5rem; }
+  .nav-menu a {
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-menu a:hover { color: #fff; }
+  .nav-menu .nav-active { color: #fff; font-weight: 600; }
+  .nav-user { display: flex; align-items: center; gap: 1rem; }
+  .user-badge { display: flex; align-items: center; gap: 0.6rem; }
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .user-name { font-weight: 600; color: #fff; }
+  .btn-logout { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.9rem; }
+  .btn-logout:hover { color: #fff; }
+
+  .main { flex: 1; padding: 2.5rem 1.5rem; max-width: 800px; margin: 0 auto; width: 100%; }
+  .back-link-dash { display: inline-block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+  .back-link-dash:hover { color: var(--primary-dark); text-decoration: underline; }
+  .section-hero {
+    background: linear-gradient(135deg, rgba(233,30,140,0.06) 0%, rgba(156,39,176,0.08) 100%);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(233,30,140,0.12);
+  }
+  .section-hero h1 { font-size: 1.85rem; margin-bottom: 0.5rem; color: #1a1a2e; font-weight: 700; }
+  .section-hero .subtitle { color: #5a5a6e; margin-bottom: 1.25rem; font-size: 1rem; }
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.6rem;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); box-shadow: 0 4px 14px rgba(91,75,138,0.35); }
+  .btn-icon { font-size: 1.2em; font-weight: 400; }
+  .btn-secondary { background: #e8e4ec; color: #333; }
+  .btn-secondary:hover { background: #ddd8e4; }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .empty-icon { color: var(--primary); opacity: 0.6; margin-bottom: 1.5rem; }
+  .empty-state h3 { font-size: 1.25rem; margin-bottom: 0.5rem; color: #2d3748; }
+  .empty-state p { color: #718096; margin-bottom: 1.5rem; }
+  .btn-empty { margin-top: 0.5rem; }
+
+  .citas-list { display: flex; flex-direction: column; gap: 1rem; }
+  .cita-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .cita-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+  .cita-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .cita-fecha { font-weight: 700; color: var(--text); font-size: 1.05rem; }
+  .cita-estado { font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 2rem; font-weight: 600; }
+  .estado-pendiente { background: #FFF3E0; color: #E65100; }
+  .estado-confirmada { background: #E8F5E9; color: #2E7D32; }
+  .estado-completada { background: #E3F2FD; color: #1565C0; }
+  .estado-cancelada { background: #FFEBEE; color: #C62828; }
+  .estado-no-asistio { background: #F5F5F5; color: #616161; }
+  .cita-body p { margin-bottom: 0.4rem; font-size: 0.95rem; color: var(--text-muted); }
+  .cita-actions { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid #E7E5E4; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-pagar-cita {
+    color: #2e7d32;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.35rem 0;
+  }
+  .btn-pagar-cita:hover { text-decoration: underline; }
+  .btn-cancelar { background: none; border: none; color: #C62828; cursor: pointer; font-size: 0.9rem; padding: 0.35rem 0; }
+  .btn-cancelar:hover { text-decoration: underline; }
+  .loading { color: var(--text-muted); padding: 3rem; text-align: center; }
+  .panel-desc { color: var(--text-muted); }
+</style>

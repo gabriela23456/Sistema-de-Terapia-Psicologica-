@@ -1,0 +1,348 @@
+---
+/**
+ * CenTI-R - Pagos de consultas
+ * Tarjeta, efectivo (comprobante), transferencia, PayPal
+ */
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagos en línea - CenTI-R</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container-header">
+      <a href="/" class="brand">CenTI-R</a>
+      <nav class="nav-menu">
+        <a href="/dashboard/">Mi panel</a>
+        <a href="/">Inicio</a>
+        <a href="/informacion/">Información</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenedor para toasts Bootstrap -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;" id="toastContainer"></div>
+
+  <main class="pagos-main">
+    <div class="pagos-container">
+      <a href="/dashboard/" class="back-link">← Volver al panel</a>
+      <h1>Pagos de consultas</h1>
+      <p class="pagos-desc">Selecciona la cita que deseas pagar y el método de pago.</p>
+
+      <div id="alertContainer"></div>
+      <div id="selectCita" class="pagos-card">
+        <h2>1. Selecciona tu cita</h2>
+        <p id="citaInfo" class="text-muted">Cargando citas...</p>
+        <select id="citaSelect" class="form-select">
+          <option value="">-- Selecciona una cita --</option>
+        </select>
+      </div>
+
+      <div id="metodosPago" class="pagos-card" style="display:none">
+        <h2>2. Método de pago</h2>
+        <div class="metodos-grid">
+          <button type="button" class="metodo-btn active" data-metodo="tarjeta">💳 Tarjeta</button>
+          <button type="button" class="metodo-btn" data-metodo="efectivo">💵 Efectivo</button>
+          <button type="button" class="metodo-btn" data-metodo="transferencia">🏦 Transferencia</button>
+          <button type="button" class="metodo-btn" data-metodo="paypal">🅿️ PayPal</button>
+        </div>
+
+        <div id="formTarjeta" class="metodo-form">
+          <h3>Datos de tarjeta</h3>
+          <div class="mb-3">
+            <label class="form-label">Número de tarjeta</label>
+            <input type="text" id="numTarjeta" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" />
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Vencimiento (MM/AA)</label>
+              <input type="text" id="vencimiento" class="form-control" placeholder="12/25" maxlength="5" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">CVV</label>
+              <input type="password" id="cvv" class="form-control" placeholder="123" maxlength="4" />
+            </div>
+          </div>
+          <button type="button" class="btn-pagar" id="btnPagarTarjeta">Pagar con tarjeta</button>
+        </div>
+
+        <div id="formEfectivo" class="metodo-form" style="display:none">
+          <h3>Pago en efectivo</h3>
+          <p>Realiza el pago en efectivo en nuestras instalaciones. Al confirmar, se generará tu comprobante.</p>
+          <button type="button" class="btn-pagar" id="btnPagarEfectivo">Confirmar pago en efectivo</button>
+        </div>
+
+        <div id="formTransferencia" class="metodo-form" style="display:none">
+          <h3>Transferencia bancaria</h3>
+          <div class="transferencia-datos">
+            <p><strong>Banco:</strong> BBVA</p>
+            <p><strong>CLABE:</strong> 012 180 001234567890 1</p>
+            <p><strong>Cuenta:</strong> 0123 4567 8901 2345</p>
+            <p><strong>Titular:</strong> CenTI-R S.C.</p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Referencia / Folio de transferencia</label>
+            <input type="text" id="refTransferencia" class="form-control" placeholder="Ej: 12345678" />
+          </div>
+          <button type="button" class="btn-pagar" id="btnPagarTransferencia">Confirmar transferencia</button>
+        </div>
+
+        <div id="formPaypal" class="metodo-form" style="display:none">
+          <h3>PayPal</h3>
+          <div id="paypal-button-container"></div>
+        </div>
+      </div>
+
+      <div id="historialPagos" class="pagos-card" style="display:none">
+        <h2>Pagos realizados</h2>
+        <p id="historialInfo" class="text-muted small">Cargando...</p>
+        <div id="historialList"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pagos-footer">
+    <a href="/dashboard/">Volver al panel</a> · <a href="/">Inicio</a> · <a href="/#contacto">Contacto</a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = (typeof window !== 'undefined' && window.location.hostname === 'localhost' && ['4321','4322','4323'].includes(window.location.port || '')) ? 'http://localhost:8080/api' : '/api';
+    const fetchOpts = (opts = {}) => ({ ...opts, credentials: 'include' });
+    let citasPendientes = [];
+    let metodoActual = 'tarjeta';
+
+    async function checkAuth() {
+      const res = await fetch(`${API}/auth`, fetchOpts());
+      const data = await res.json();
+      if (!data.logged) {
+        window.location.href = '/login/?redirect=/pagos/';
+        return false;
+      }
+      return true;
+    }
+
+    function showAlert(type, msg) {
+      const c = document.getElementById('alertContainer');
+      c.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    }
+
+    async function loadCitas() {
+      const res = await fetch(`${API}/citas`, fetchOpts());
+      if (res.status === 401) return [];
+      const citas = await res.json();
+      return citas.filter(c => c.estado === 'pendiente' && (c.costo > 0 || !c.costo));
+    }
+
+    function showToast(type, title, body) {
+      const container = document.getElementById('toastContainer');
+      const id = 'toast-' + Date.now();
+      const bg = type === 'success' ? 'success' : type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'info';
+      container.insertAdjacentHTML('beforeend', `
+        <div class="toast align-items-center text-bg-${bg} border-0" id="${id}" role="alert">
+          <div class="d-flex">
+            <div class="toast-body">
+              <strong>${title}</strong>${body ? '<br>' + body : ''}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      `);
+      const el = document.getElementById(id);
+      const toast = new bootstrap.Toast(el, { delay: 5000 });
+      toast.show();
+      el.addEventListener('hidden.bs.toast', () => el.remove());
+    }
+
+    function mostrarMetodo(metodo) {
+      metodoActual = metodo;
+      document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-metodo="${metodo}"]`)?.classList.add('active');
+      document.querySelectorAll('.metodo-form').forEach(f => f.style.display = 'none');
+      document.getElementById('form' + metodo.charAt(0).toUpperCase() + metodo.slice(1)).style.display = 'block';
+      if (metodo === 'paypal') initPayPal();
+    }
+
+    async function procesarPago(metodo, extras = {}) {
+      const citaId = document.getElementById('citaSelect').value;
+      if (!citaId) { showAlert('warning', 'Selecciona una cita'); return; }
+      const cita = citasPendientes.find(c => c.id == citaId);
+      if (!cita) return;
+
+      const payload = { cita_id: parseInt(citaId), metodo, monto: parseFloat(cita.costo) || 600 };
+      if (metodo === 'transferencia') payload.referencia = document.getElementById('refTransferencia').value || 'TRF-' + Date.now();
+
+      try {
+        const res = await fetch(`${API}/pagos`, fetchOpts({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, ...extras })
+        }));
+        const json = await res.json();
+        if (json.success) {
+          showToast('success', 'Pago registrado', 'Puedes ver tu comprobante en el enlace.');
+          showAlert('success', `¡Pago registrado! Folio: ${json.pago.folio}. <a href="${API}/pagos/comprobante/${json.pago.folio}" target="_blank" rel="noopener">Ver comprobante</a>`);
+          document.getElementById('refTransferencia').value = '';
+          document.getElementById('numTarjeta').value = '';
+          document.getElementById('vencimiento').value = '';
+          document.getElementById('cvv').value = '';
+          loadCitas().then(renderCitas);
+        } else {
+          showToast('danger', 'Error', json.error || 'No se pudo procesar el pago.');
+          showAlert('danger', json.error || 'Error al procesar');
+        }
+      } catch (e) {
+        showToast('danger', 'Error', 'Error de conexión. Verifica que el servidor esté activo.');
+        showAlert('danger', 'Error de conexión');
+      }
+    }
+
+    function initPayPal() {
+      const container = document.getElementById('paypal-button-container');
+      const citaId = document.getElementById('citaSelect').value;
+      const cita = citasPendientes.find(c => c.id == citaId);
+      const monto = cita ? (parseFloat(cita.costo) || 600) : 600;
+
+      const PAYPAL_CLIENT_ID = 'TU_CLIENT_ID_PAYPAL';
+      if (!PAYPAL_CLIENT_ID || PAYPAL_CLIENT_ID === 'TU_CLIENT_ID_PAYPAL') {
+        container.innerHTML = '<p class="text-muted mb-2">Para pagos con PayPal configura el cliente en el servidor.</p><button type="button" class="btn-pagar" onclick="window.procesarPagoSimulado()">Simular pago con PayPal</button>';
+        return;
+      }
+
+      if (typeof paypal === 'undefined') {
+        const s = document.createElement('script');
+        s.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=MXN`;
+        s.onload = () => renderPayPal(monto);
+        document.head.appendChild(s);
+        return;
+      }
+      renderPayPal(monto);
+    }
+
+    function procesarPagoSimulado() {
+      procesarPago('paypal', { order_id: 'PAYPAL-SIM-' + Date.now() });
+    }
+
+    function renderPayPal(monto) {
+      const container = document.getElementById('paypal-button-container');
+      container.innerHTML = '';
+      if (typeof paypal === 'undefined') return;
+      paypal.Buttons({
+        createOrder: (data, actions) => actions.order.create({
+          purchase_units: [{ amount: { currency_code: 'MXN', value: monto.toFixed(2) } }]
+        }),
+        onApprove: (data, actions) => actions.order.capture().then(() => {
+          procesarPago('paypal', { order_id: data.orderID });
+        })
+      }).render('#paypal-button-container');
+    }
+
+    window.procesarPagoSimulado = procesarPagoSimulado;
+
+    function renderCitas(citas) {
+      citasPendientes = citas;
+      const sel = document.getElementById('citaSelect');
+      const info = document.getElementById('citaInfo');
+      const metodos = document.getElementById('metodosPago');
+      sel.innerHTML = '<option value="">-- Selecciona una cita --</option>' +
+        citas.map(c => `<option value="${c.id}">${c.fecha} ${c.hora_inicio?.slice(0,5)} - $${c.costo || 600} - ${c.terapeuta_nombre}</option>`).join('');
+      info.textContent = citas.length ? `${citas.length} cita(s) pendiente(s) de pago` : 'No tienes citas pendientes de pago. Agenda una cita primero.';
+      if (!citas.length) info.innerHTML += ' <a href=\"/citas/formulario/\">Agendar cita</a>';
+      metodos.style.display = citas.length ? 'block' : 'none';
+    }
+
+    async function loadHistorialPagos() {
+      try {
+        const res = await fetch(`${API}/pagos`, fetchOpts());
+        if (!res.ok) return;
+        const json = await res.json();
+        const pagos = json.pagos || [];
+        const box = document.getElementById('historialPagos');
+        const list = document.getElementById('historialList');
+        const info = document.getElementById('historialInfo');
+        box.style.display = 'block';
+        if (pagos.length === 0) {
+          info.textContent = 'Aún no has realizado ningún pago.';
+          list.innerHTML = '';
+          return;
+        }
+        info.textContent = '';
+        list.innerHTML = '<ul class="list-group list-group-flush">' + pagos.slice(0, 10).map(p => {
+          const fechaPago = p.created_at ? new Date(p.created_at).toLocaleDateString('es-MX') : (p.fecha || '');
+          const compUrl = p.comprobante_folio ? `${API}/pagos/comprobante/${p.comprobante_folio}` : '#';
+          return `<li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>${fechaPago} · $${parseFloat(p.monto).toFixed(2)} · ${(p.metodo || '').charAt(0).toUpperCase() + (p.metodo || '').slice(1)}</span>
+            ${p.comprobante_folio ? `<a href="${compUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">Comprobante</a>` : ''}
+          </li>`;
+        }).join('') + '</ul>';
+      } catch (e) { document.getElementById('historialPagos').style.display = 'none'; }
+    }
+
+    (async () => {
+      if (!await checkAuth()) return;
+
+      let citas = await loadCitas();
+      renderCitas(citas);
+
+      const urlParams = new URLSearchParams(location.search);
+      const citaParam = urlParams.get('cita');
+      if (citaParam) document.getElementById('citaSelect').value = citaParam;
+
+      document.querySelectorAll('.metodo-btn').forEach(btn => {
+        btn.addEventListener('click', () => mostrarMetodo(btn.dataset.metodo));
+      });
+      document.getElementById('btnPagarTarjeta').addEventListener('click', () => {
+        const num = document.getElementById('numTarjeta').value.replace(/\s/g, '');
+        if (num.length < 13) { showToast('warning', 'Datos incompletos', 'Ingresa un número de tarjeta válido (mín. 13 dígitos).'); return; }
+        procesarPago('tarjeta', { token: 'TARJ-' + num.slice(-4) });
+      });
+      document.getElementById('btnPagarEfectivo').addEventListener('click', () => procesarPago('efectivo'));
+      document.getElementById('btnPagarTransferencia').addEventListener('click', () => {
+        if (!document.getElementById('refTransferencia').value.trim()) {
+          showToast('warning', 'Falta referencia', 'Ingresa la referencia o folio de tu transferencia.');
+          return;
+        }
+        procesarPago('transferencia');
+      });
+
+      loadHistorialPagos();
+    })();
+  </script>
+</body>
+</html>
+
+<style is:global>
+  :root { --primary: #5B4B8A; --primary-dark: #4A3D72; --text: #1C1917; --text-muted: #57534E; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: var(--text); background: #FAFAF9; min-height: 100vh; display: flex; flex-direction: column; }
+  .site-header { background: #fff; box-shadow: 0 1px 0 #E7E5E4; }
+  .container-header { max-width: 1000px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .brand { text-decoration: none; color: var(--primary); font-weight: 800; font-size: 1.35rem; }
+  .nav-menu { display: flex; gap: 1.5rem; }
+  .nav-menu a { color: var(--text); text-decoration: none; font-size: 0.95rem; font-weight: 500; }
+  .nav-menu a:hover { color: var(--primary); }
+  .pagos-main { flex: 1; padding: 3rem 1.5rem; }
+  .pagos-container { max-width: 600px; margin: 0 auto; }
+  .back-link { display: inline-block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+  .back-link:hover { color: var(--primary-dark); text-decoration: underline; }
+  .pagos-main h1 { font-size: 1.75rem; margin-bottom: 0.5rem; font-weight: 800; }
+  .pagos-desc { color: var(--text-muted); margin-bottom: 2rem; }
+  .pagos-card { background: #fff; border-radius: 12px; padding: 2rem; border: 1px solid #E7E5E4; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 2rem; }
+  .pagos-card h2 { font-size: 1.2rem; margin-bottom: 1rem; font-weight: 700; }
+  .metodos-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .metodo-btn { padding: 0.6rem 1rem; border: 2px solid #E7E5E4; background: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+  .metodo-btn:hover { border-color: var(--primary); }
+  .metodo-btn.active { border-color: var(--primary); background: rgba(91,75,138,0.08); color: var(--primary); }
+  .metodo-form h3 { font-size: 1rem; margin-bottom: 1rem; }
+  .transferencia-datos { background: #FAFAF9; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #E7E5E4; }
+  .btn-pagar { padding: 0.75rem 2rem; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+  .btn-pagar:hover { background: var(--primary-dark); }
+  .pagos-footer { padding: 1.5rem; text-align: center; border-top: 1px solid #E7E5E4; }
+  .pagos-footer a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; }
+  .pagos-footer a:hover { color: var(--primary); }
+</style>

@@ -1,0 +1,397 @@
+---
+/**
+ * CenTI-R - Página principal
+ * Centro de Terapia Psicológica - Diseño profesional
+ */
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CenTI-R | Centro de Terapia Psicológica — Citas en línea</title>
+  <meta name="description" content="Agenda tu cita de terapia psicológica en línea. Consultas individuales, pareja, familiar e infantil. Presencial y en línea. Puebla." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="home">
+  <!-- Barra superior: contacto rápido -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <span class="topbar-item"><strong>Tel:</strong> <a href="tel:2462486999">246 248 6999</a></span>
+      <span class="topbar-item"><strong>Horario:</strong> Lun–Vie 10:00–18:00 · Sáb 9:00–14:00</span>
+      <a href="https://wa.me/522462486999" target="_blank" rel="noopener" class="topbar-wa">WhatsApp</a>
+    </div>
+  </div>
+
+  <!-- Header principal -->
+  <header class="main-header">
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <span class="logo-icon">CenTI-R</span>
+        <span class="logo-text">Centro de Terapia Psicológica</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menú"><span></span><span></span><span></span></button>
+      <nav class="main-nav" id="mainNav">
+        <a href="/#servicios">Servicios</a>
+        <a href="/informacion/#tipos-terapia">Tipos de terapia</a>
+        <a href="/informacion/">Información</a>
+        <a href="/pagos/">Pagos</a>
+        <a href="/login/" class="nav-cta">Mi cuenta</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero con imagen real -->
+  <section class="hero hero-with-img">
+    <div class="hero-img-wrap">
+      <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=85" alt="Consultorio de terapia psicológica en CenTI-R" class="hero-img" width="1200" height="700" />
+    </div>
+    <div class="hero-inner">
+      <p class="hero-badge">Atención presencial y en línea</p>
+      <h1 class="hero-title">Tu bienestar emocional nos importa</h1>
+      <p class="hero-desc">Acompañamiento profesional en psicología clínica. Agenda tu cita en línea de forma rápida y segura.</p>
+      <div class="hero-actions">
+        <a href="/login/" class="btn btn-primary-hero">Agendar mi cita</a>
+        <a href="/informacion/" class="btn btn-secondary-hero">Conocer más</a>
+      </div>
+    </div>
+    <div class="hero-shape"></div>
+  </section>
+
+  <!-- Servicios con fotos -->
+  <section class="section section-services" id="servicios">
+    <div class="container-narrow">
+      <h2 class="section-title">Nuestros servicios</h2>
+      <p class="section-lead">Modalidades de terapia adaptadas a tus necesidades.</p>
+      <div class="services-grid">
+        <a href="/informacion/#tipos-terapia" class="service-card">
+          <div class="service-card-img">
+            <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=80" alt="Terapia individual" width="600" height="360" />
+          </div>
+          <h3>Terapia individual</h3>
+          <p>Sesiones personalizadas para trabajar ansiedad, estrés, autoestima y procesos personales.</p>
+        </a>
+        <a href="/informacion/#tipos-terapia" class="service-card">
+          <div class="service-card-img">
+            <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80" alt="Terapia de pareja" width="600" height="360" />
+          </div>
+          <h3>Terapia de pareja</h3>
+          <p>Mejora la comunicación y el vínculo con tu pareja en un espacio de diálogo guiado.</p>
+        </a>
+        <a href="/informacion/#tipos-terapia" class="service-card">
+          <div class="service-card-img">
+            <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&q=80" alt="Terapia familiar" width="600" height="360" />
+          </div>
+          <h3>Terapia familiar</h3>
+          <p>Terapia para el núcleo familiar: dinámicas, límites y resolución de conflictos.</p>
+        </a>
+        <a href="/informacion/#tipos-terapia" class="service-card">
+          <div class="service-card-img">
+            <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&q=80" alt="Terapia infantil" width="600" height="360" />
+          </div>
+          <h3>Terapia infantil</h3>
+          <p>Atención especializada para niñas y niños con técnicas adaptadas a su edad.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonios -->
+  <section class="section section-testimonios">
+    <div class="container-narrow">
+      <h2 class="section-title">Lo que dicen nuestros pacientes</h2>
+      <p class="section-lead">Experiencias reales de personas que han tomado terapia con nosotros.</p>
+      <div class="testimonios-grid">
+        <div class="testimonio-card">
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80" alt="María G." class="testimonio-foto" width="80" height="80" />
+          <blockquote class="testimonio-texto">Llevo un año en terapia individual y mi vida ha cambiado. Aprendí a manejar la ansiedad y a poner límites. El equipo de CenTI-R es serio y muy profesional.</blockquote>
+          <p class="testimonio-nombre">María G.</p>
+          <p class="testimonio-rol">Paciente, terapia individual</p>
+        </div>
+        <div class="testimonio-card">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" alt="Roberto L." class="testimonio-foto" width="80" height="80" />
+          <blockquote class="testimonio-texto">Mi pareja y yo estábamos en un momento muy difícil. Las sesiones de terapia de pareja nos ayudaron a comunicarnos mejor y a recuperar la confianza. Totalmente recomendable.</blockquote>
+          <p class="testimonio-nombre">Roberto L.</p>
+          <p class="testimonio-rol">Paciente, terapia de pareja</p>
+        </div>
+        <div class="testimonio-card">
+          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80" alt="Laura S." class="testimonio-foto" width="80" height="80" />
+          <blockquote class="testimonio-texto">Traje a mi hija por problemas en la escuela. La terapia infantil fue un antes y un después. Ahora entiende mejor sus emociones y nosotros como padres también aprendimos.</blockquote>
+          <p class="testimonio-nombre">Laura S.</p>
+          <p class="testimonio-rol">Madre de familia, terapia infantil</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo funciona -->
+  <section class="section section-steps">
+    <div class="container-narrow">
+      <h2 class="section-title">¿Cómo agendar?</h2>
+      <div class="steps-grid">
+        <div class="step">
+          <span class="step-num">1</span>
+          <h3>Regístrate o inicia sesión</h3>
+          <p>Crea tu cuenta en un momento y accede a tu panel.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <h3>Elige fecha y especialista</h3>
+          <p>Revisa el calendario de disponibilidad y selecciona tu horario.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <h3>Asiste a tu cita</h3>
+          <p>Presencial o en línea. Puedes pagar en el sitio o en línea.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA principal -->
+  <section class="section section-cta">
+    <div class="cta-box">
+      <h2 class="cta-title">Listo para dar el primer paso</h2>
+      <p class="cta-desc">Agenda tu cita hoy. Si prefieres, contáctanos por teléfono o WhatsApp.</p>
+      <div class="cta-actions">
+        <a href="/login/" class="btn btn-white">Agendar cita en línea</a>
+        <a href="tel:2462486999" class="btn btn-outline-white">Llamar: 246 248 6999</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="main-footer" id="contacto">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <strong class="footer-title">CenTI-R</strong>
+          <p>Centro de Terapia Psicológica. Atención presencial y en línea en Puebla.</p>
+        </div>
+        <div class="footer-col">
+          <strong class="footer-title">Contacto</strong>
+          <p><a href="tel:2462486999">246 248 6999</a></p>
+          <p><a href="mailto:centir2020@gmail.com">centir2020@gmail.com</a></p>
+          <p><a href="https://wa.me/522462486999" target="_blank" rel="noopener">WhatsApp</a></p>
+        </div>
+        <div class="footer-col">
+          <strong class="footer-title">Enlaces</strong>
+          <a href="/informacion/">Información y políticas</a>
+          <a href="/informacion/#sucursales">Sucursales</a>
+          <a href="/login/">Iniciar sesión</a>
+          <a href="/pagos/">Pagos en línea</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© CenTI-R. Todos los derechos reservados.</span>
+        <a href="/admin/">Acceso administradores</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.getElementById('mainNav').classList.toggle('open');
+    });
+  </script>
+
+  <style is:global>
+    :root {
+      --primary: #5B4B8A;
+      --primary-dark: #4A3D72;
+      --accent: #7B68A6;
+      --bg: #FAFAF9;
+      --bg-card: #FFFFFF;
+      --text: #1C1917;
+      --text-muted: #57534E;
+      --border: #E7E5E4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body.home { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+
+    .topbar {
+      background: var(--primary);
+      color: rgba(255,255,255,0.95);
+      font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+    }
+    .topbar-inner { max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1.5rem; }
+    .topbar-item a { color: inherit; text-decoration: none; }
+    .topbar-item a:hover { text-decoration: underline; }
+    .topbar-wa { color: #25D366; font-weight: 600; text-decoration: none; }
+    .topbar-wa:hover { text-decoration: underline; }
+
+    .main-header {
+      background: var(--bg-card);
+      box-shadow: 0 1px 0 var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner { max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .logo { text-decoration: none; color: var(--text); display: flex; flex-direction: column; gap: 0.15rem; }
+    .logo-icon { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.02em; }
+    .logo-text { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; }
+    .nav-toggle span { display: block; width: 22px; height: 2px; background: var(--text); margin: 5px 0; }
+    .main-nav { display: flex; align-items: center; gap: 2rem; }
+    .main-nav a { color: var(--text-muted); text-decoration: none; font-weight: 500; font-size: 0.95rem; }
+    .main-nav a:hover { color: var(--primary); }
+    .nav-cta { background: var(--primary); color: #fff !important; padding: 0.5rem 1.25rem; border-radius: 8px; }
+    .nav-cta:hover { background: var(--primary-dark); color: #fff !important; }
+    @media (max-width: 768px) {
+      .nav-toggle { display: block; }
+      .main-nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); flex-direction: column; padding: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+      .main-nav.open { display: flex; }
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      padding: 4rem 1.5rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-with-img {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      padding: 0;
+      min-height: 420px;
+    }
+    .hero-img-wrap {
+      order: -1;
+      position: relative;
+      min-height: 280px;
+    }
+    .hero-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+    .hero-with-img .hero-inner {
+      padding: 2.5rem 1.5rem 3rem;
+      text-align: center;
+      max-width: none;
+    }
+    @media (min-width: 768px) {
+      .hero-with-img {
+        grid-template-columns: 1fr 1fr;
+        min-height: 420px;
+      }
+      .hero-img-wrap { min-height: 420px; order: 0; }
+      .hero-with-img .hero-inner {
+        padding: 3rem 2rem;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .hero-with-img .hero-actions { justify-content: flex-start; }
+    }
+    .hero-inner { max-width: 720px; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
+    .hero-badge { font-size: 0.875rem; opacity: 0.9; margin-bottom: 1rem; font-weight: 500; }
+    .hero-title { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; letter-spacing: -0.02em; }
+    .hero-desc { font-size: 1.125rem; opacity: 0.95; margin-bottom: 2rem; max-width: 540px; margin-left: auto; margin-right: auto; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+    .btn { display: inline-block; padding: 0.875rem 1.75rem; font-weight: 600; font-size: 1rem; border-radius: 10px; text-decoration: none; transition: transform 0.15s, box-shadow 0.15s; font-family: inherit; border: none; cursor: pointer; }
+    .btn-primary-hero { background: #fff; color: var(--primary); }
+    .btn-primary-hero:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+    .btn-secondary-hero { background: rgba(255,255,255,0.15); color: #fff; border: 2px solid rgba(255,255,255,0.5); }
+    .btn-secondary-hero:hover { background: rgba(255,255,255,0.25); }
+    .hero-shape { position: absolute; bottom: -2px; left: 0; right: 0; height: 80px; background: var(--bg); border-radius: 50% 50% 0 0 / 100% 100% 0 0; }
+
+    .section { padding: 4rem 1.5rem; }
+    .container-narrow { max-width: 1000px; margin: 0 auto; }
+    .section-title { font-size: 1.75rem; font-weight: 800; color: var(--text); margin-bottom: 0.5rem; }
+    .section-lead { color: var(--text-muted); margin-bottom: 2rem; }
+
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+    .service-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      overflow: hidden;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .service-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-color: var(--accent); }
+    .service-card-img {
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      background: var(--border);
+    }
+    .service-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .service-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--primary); padding: 1rem 1.25rem 0; }
+    .service-card p { font-size: 0.9rem; color: var(--text-muted); padding: 0 1.25rem 1.25rem; }
+
+    .section-testimonios { background: var(--bg-card); }
+    .testimonios-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 1.5rem; }
+    @media (min-width: 768px) { .testimonios-grid { grid-template-columns: repeat(3, 1fr); } }
+    .testimonio-card {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 1.75rem;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .testimonio-foto {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 1rem;
+    }
+    .testimonio-texto {
+      font-size: 1rem;
+      line-height: 1.55;
+      color: var(--text);
+      margin: 0 0 1rem;
+      font-style: italic;
+    }
+    .testimonio-nombre { font-weight: 700; color: var(--primary); margin: 0 0 0.25rem; }
+    .testimonio-rol { font-size: 0.875rem; color: var(--text-muted); margin: 0; }
+
+    .section-steps { background: var(--bg-card); }
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; margin-top: 2rem; }
+    .step { text-align: center; }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: var(--primary); color: #fff; font-weight: 800; font-size: 1.25rem; border-radius: 50%; margin-bottom: 1rem; }
+    .step h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .step p { font-size: 0.9rem; color: var(--text-muted); }
+
+    .section-cta { padding: 3rem 1.5rem; }
+    .cta-box {
+      max-width: 640px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      padding: 3rem 2rem;
+      border-radius: 16px;
+      text-align: center;
+    }
+    .cta-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .cta-desc { opacity: 0.9; margin-bottom: 1.5rem; }
+    .cta-actions { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+    .btn-white { background: #fff; color: var(--primary); }
+    .btn-white:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+    .btn-outline-white { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.7); }
+    .btn-outline-white:hover { background: rgba(255,255,255,0.1); }
+
+    .main-footer { background: var(--text); color: rgba(255,255,255,0.85); padding: 3rem 1.5rem 2rem; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+    .footer-title { display: block; color: #fff; font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .footer-col p, .footer-col a { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 0.35rem; text-decoration: none; }
+    .footer-col a:hover { color: #fff; text-decoration: underline; }
+    .footer-bottom { padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.15); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.85rem; }
+    .footer-bottom a { color: rgba(255,255,255,0.7); text-decoration: none; }
+    .footer-bottom a:hover { color: #fff; }
+  </style>
+</body>
+</html>
